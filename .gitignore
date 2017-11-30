@@ -1,0 +1,6 @@
+*swp
+*iml
+*.idea
+*.db
+ctsync-pull/ctsync-pull
+ctsync-push/ctsync-push
