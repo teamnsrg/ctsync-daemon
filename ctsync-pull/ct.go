@@ -26,9 +26,17 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	zsearch "github.com/censys/censys-definitions/go/censys-definitions"
+	//"fmt"
+	"encoding/json"
+	"fmt"
 )
 
 const kMaxFailedScans = 10
+
+func extractMerkleTreeLeafFromLogEntry(entry *ct.LogEntry) (version string) {
+	version = entry.Leaf.Version.String()
+	return
+}
 
 func extractPrecertFromLogEntry(entry *ct.LogEntry) (raw []byte, chainWithoutLeaf [][]byte) {
 	raw = entry.Precert.Raw
@@ -85,27 +93,39 @@ func sendExternalCertificateThroughChannel(externalCertificate *zsearch.External
 	out <- externalCertificateBytes
 }
 
-func bindFoundCertToChannel(out chan []byte) func(*ct.LogEntry, string) {
+func bindFoundCertToChannel(out chan string) func(*ct.LogEntry, string) {
 	return func(entry *ct.LogEntry, server string) {
-		raw, chainWithoutLeaf := extractCertificateFromLogEntry(entry)
-		externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
-		for _, external := range externalCertificates {
-			sendExternalCertificateThroughChannel(external, out)
+		b, err := json.Marshal(entry)
+		if err != nil {
+			log.Debugf(err.Error())
+			return
 		}
+		out <- string(b)
+		//raw, chainWithoutLeaf := extractCertificateFromLogEntry(entry)
+		//externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
+		//for _, external := range externalCertificates {
+		//	sendExternalCertificateThroughChannel(external, out)
+		//}
 	}
 }
 
-func bindFoundPrecertToChannel(out chan []byte) func(*ct.LogEntry, string) {
+func bindFoundPrecertToChannel(out chan string) func(*ct.LogEntry, string) {
 	return func(entry *ct.LogEntry, server string) {
-		raw, chainWithoutLeaf := extractPrecertFromLogEntry(entry)
-		externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
-		for _, external := range externalCertificates {
-			sendExternalCertificateThroughChannel(external, out)
+		b, err := json.Marshal(entry)
+		if err != nil {
+			log.Debugf(err.Error())
+			return
 		}
+		out <- string(b)
+		//raw, chainWithoutLeaf := extractPrecertFromLogEntry(entry)
+		//externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
+		//for _, external := range externalCertificates {
+		//	sendExternalCertificateThroughChannel(external, out)
+		//}
 	}
 }
 
-func pullFromCT(l CTLogInfo, externalCertificateOut chan []byte, updater chan int64, logInfoOut chan CTLogInfo, numMatch int, numFetch int, wg *sync.WaitGroup, running *runState) {
+func pullFromCT(l CTLogInfo, externalCertificateOut chan string, updater chan int64, logInfoOut chan CTLogInfo, numMatch int, numFetch int, wg *sync.WaitGroup, running *runState) {
 	defer wg.Done()
 	failedScanCount := 0
 	for {
@@ -149,6 +169,7 @@ func pullFromCT(l CTLogInfo, externalCertificateOut chan []byte, updater chan in
 		s := scanner.NewScanner(logConnection.logClient, scanOpts, logger)
 		foundCert := bindFoundCertToChannel(externalCertificateOut)
 		foundPrecert := bindFoundPrecertToChannel(externalCertificateOut)
+
 		lastIndex, err := s.Scan(foundCert, foundPrecert, updater)
 		if err != nil {
 			log.Errorf("%s: scan failed: %s", l.Name, err)

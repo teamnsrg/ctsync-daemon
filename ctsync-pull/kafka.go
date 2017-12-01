@@ -18,7 +18,13 @@ import (
 	"sync"
 
 	"github.com/Shopify/sarama"
-	"github.com/prometheus/common/log"
+	//"github.com/prometheus/common/log"
+	//"github.com/golang/protobuf/proto"
+
+	//zsearch "github.com/censys/censys-definitions/go/censys-definitions"
+	//"crypto/x509"
+	//"encoding/json"
+	"fmt"
 )
 
 func createKafkaProducer(brokers []string) (producer sarama.SyncProducer, err error) {
@@ -29,16 +35,20 @@ func createKafkaProducer(brokers []string) (producer sarama.SyncProducer, err er
 	return
 }
 
-func pushToKafka(incoming <-chan []byte, client sarama.SyncProducer, topic string, wg *sync.WaitGroup) {
+func pushToKafka(incoming <-chan string, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for message := range incoming {
-		log.Debug("received a message to send back to Kafka")
-		_, _, err := client.SendMessage(&sarama.ProducerMessage{
-			Topic: topic,
-			Value: sarama.ByteEncoder(message)})
-		if err != nil {
-			log.Fatalf("unable to send message to Kafka: %s", err)
-		}
+		fmt.Println(string(message))
+
+		//externalCertificate := zsearch.ExternalCertificate{}
+		//err := proto.Unmarshal(message, &externalCertificate)
+		//if err != nil {
+		//	log.Fatal("could not unmarshal externalCertificate")
+		//}
+		//cert := externalCertificate.GetAnonymousRecord().GetCertificate()
+		//x509cert,  _ := x509.ParseCertificate(cert.GetRaw())
+		//jsonOut,  _ := json.Marshal(x509cert)
+		//fmt.Println(string(jsonOut))
 	}
-	log.Info("push to Kafka process ending")
+	//log.Info("push to Kafka process ending")
 }

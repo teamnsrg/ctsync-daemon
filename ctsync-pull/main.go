@@ -21,7 +21,7 @@ import (
 	"runtime"
 	"syscall"
 
-	"strings"
+	//"strings"
 	"sync"
 
 	"github.com/jinzhu/gorm"
@@ -82,8 +82,8 @@ func (r *runState) checkRunning() bool {
 
 func main() {
 	configFile := flag.String("config", "config.json", "The configuration file for log servers")
-	brokerString := flag.String("brokers", "localhost:9092", "A comma separated list of the kafka broker locations")
-	outTopic := flag.String("out-topic", "ct_to_zdb", "Kafka topic to place certificates in")
+	//brokerString := flag.String("brokers", "localhost:9092", "A comma separated list of the kafka broker locations")
+	//outTopic := flag.String("out-topic", "ct_to_zdb", "Kafka topic to place certificates in")
 	dbPath := flag.String("db", "ctsync-pull.db", "Path to the SQLite file that stores log sync progress")
 	numProcs := flag.Int("gomaxprocs", 0, "Number of processes to use")
 	numFetch := flag.Int("fetchers", 1, "Number of workers assigned to fetch certificates from each server")
@@ -92,7 +92,7 @@ func main() {
 
 	log.SetLevel(log.InfoLevel)
 	runtime.GOMAXPROCS(*numProcs)
-	brokers := strings.Split(*brokerString, ",")
+	//brokers := strings.Split(*brokerString, ",")
 
 	// Initialize Database
 	db, err := gorm.Open("sqlite3", *dbPath)
@@ -108,11 +108,11 @@ func main() {
 		log.Fatalf("could not load configuration file: %s", err)
 	}
 
-	// Connect to Kafka
-	producer, err := createKafkaProducer(brokers)
-	if err != nil {
-		log.Fatalf("could not create kafka producer: %s", err)
-	}
+	//// Connect to Kafka
+	//producer, err := createKafkaProducer(brokers)
+	//if err != nil {
+	//	log.Fatalf("could not create kafka producer: %s", err)
+	//}
 
 	// Clean up correctly
 	running := runState{}
@@ -130,10 +130,11 @@ func main() {
 	}()
 
 	// Start goroutine that produces certificates to Kafka.
-	certificatesToKafka := make(chan []byte, 1000)
+	certificatesToKafka := make(chan string, 1000)
 	var pushWg sync.WaitGroup
 	pushWg.Add(1)
-	go pushToKafka(certificatesToKafka, producer, *outTopic, &pushWg)
+
+	go pushToKafka(certificatesToKafka, &pushWg)
 
 	// Start goroutine that writes indicies to SQLite
 	logInfoUpdate := make(chan CTLogInfo)
