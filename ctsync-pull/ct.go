@@ -28,7 +28,8 @@ import (
 	zsearch "github.com/censys/censys-definitions/go/censys-definitions"
 	//"fmt"
 	"encoding/json"
-	"fmt"
+	//"fmt"
+	"bytes"
 )
 
 const kMaxFailedScans = 10
@@ -100,7 +101,9 @@ func bindFoundCertToChannel(out chan string) func(*ct.LogEntry, string) {
 			log.Debugf(err.Error())
 			return
 		}
-		out <- string(b)
+		var buffer bytes.Buffer
+		buffer.WriteString(b.Index + "\n")
+		out <- string(buffer)
 		//raw, chainWithoutLeaf := extractCertificateFromLogEntry(entry)
 		//externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
 		//for _, external := range externalCertificates {
@@ -116,7 +119,9 @@ func bindFoundPrecertToChannel(out chan string) func(*ct.LogEntry, string) {
 			log.Debugf(err.Error())
 			return
 		}
-		out <- string(b)
+		var buffer bytes.Buffer
+		buffer.WriteString(b.Index + "\n")
+		out <- string(buffer)
 		//raw, chainWithoutLeaf := extractPrecertFromLogEntry(entry)
 		//externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
 		//for _, external := range externalCertificates {
@@ -182,5 +187,6 @@ func pullFromCT(l CTLogInfo, externalCertificateOut chan string, updater chan in
 		logInfoOut <- l
 		log.Infof("%s: finished scan through %d", l.Name, maxIndex)
 		time.Sleep(time.Second * 5)
+		return
 	}
 }
