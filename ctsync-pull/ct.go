@@ -27,13 +27,15 @@ import (
 
 	zsearch "github.com/censys/censys-definitions/go/censys-definitions"
 	//"fmt"
-	"encoding/json"
-	//"fmt"
+	//"encoding/json"
+	"encoding/base64"
+	//"fmt""
 	"bytes"
+	"encoding/hex"
+	"strconv"
 )
 
 const kMaxFailedScans = 10
-
 func extractMerkleTreeLeafFromLogEntry(entry *ct.LogEntry) (version string) {
 	version = entry.Leaf.Version.String()
 	return
@@ -96,14 +98,43 @@ func sendExternalCertificateThroughChannel(externalCertificate *zsearch.External
 
 func bindFoundCertToChannel(out chan string) func(*ct.LogEntry, string) {
 	return func(entry *ct.LogEntry, server string) {
-		b, err := json.Marshal(entry)
-		if err != nil {
-			log.Debugf(err.Error())
-			return
-		}
 		var buffer bytes.Buffer
-		buffer.WriteString(b.Index + "\n")
-		out <- string(buffer)
+		buffer.WriteString(strconv.FormatInt(entry.Index, 10)+",")
+		buffer.WriteString(entry.Leaf.Version.String()+",")
+		buffer.WriteString(entry.Leaf.LeafType.String()+",")
+		buffer.WriteString(strconv.FormatUint(entry.Leaf.TimestampedEntry.Timestamp, 10)+",")
+		buffer.WriteString(entry.Leaf.TimestampedEntry.EntryType.String()+",")
+		if string(entry.Leaf.TimestampedEntry.X509Entry) != "null" {
+			buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.X509Entry))
+		}
+		buffer.WriteString(",")
+		for _, v := range (entry.Leaf.TimestampedEntry.PrecertEntry.IssuerKeyHash){
+			if v != 0{
+				buffer.WriteString( base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.PrecertEntry.IssuerKeyHash[:]) )
+				break
+			}
+		}
+		buffer.WriteString(",")
+		if string(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate) != "null" {
+			buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate))
+		}
+		buffer.WriteString(",")
+		buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.Extensions)+",")
+		for _,cert := range entry.Chain {
+			buffer.WriteString(base64.StdEncoding.EncodeToString(cert)+"|")
+		}
+		buffer.WriteString(",")
+		buffer.WriteString(entry.Server + ",")
+		if string(entry.Leaf.TimestampedEntry.X509Entry) != "null" {
+			sum := sha256.Sum256(entry.Leaf.TimestampedEntry.X509Entry)
+			buffer.WriteString(hex.EncodeToString(sum[:]) + ",")
+		}
+		if string(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate) != "null" {
+			sum := sha256.Sum256(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate)
+			buffer.WriteString(hex.EncodeToString(sum[:]) )
+		}
+		buffer.WriteString("\n")
+		out <- string(buffer.String())
 		//raw, chainWithoutLeaf := extractCertificateFromLogEntry(entry)
 		//externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
 		//for _, external := range externalCertificates {
@@ -114,14 +145,44 @@ func bindFoundCertToChannel(out chan string) func(*ct.LogEntry, string) {
 
 func bindFoundPrecertToChannel(out chan string) func(*ct.LogEntry, string) {
 	return func(entry *ct.LogEntry, server string) {
-		b, err := json.Marshal(entry)
-		if err != nil {
-			log.Debugf(err.Error())
-			return
-		}
 		var buffer bytes.Buffer
-		buffer.WriteString(b.Index + "\n")
-		out <- string(buffer)
+		buffer.WriteString(strconv.FormatInt(entry.Index, 10)+",")
+		buffer.WriteString(entry.Leaf.Version.String()+",")
+		buffer.WriteString(entry.Leaf.LeafType.String()+",")
+		buffer.WriteString(strconv.FormatUint(entry.Leaf.TimestampedEntry.Timestamp, 10)+",")
+		buffer.WriteString(entry.Leaf.TimestampedEntry.EntryType.String()+",")
+		if string(entry.Leaf.TimestampedEntry.X509Entry) != "null" {
+			buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.X509Entry))
+		}
+		buffer.WriteString(",")
+		for _, v := range (entry.Leaf.TimestampedEntry.PrecertEntry.IssuerKeyHash){
+			if v != 0{
+				buffer.WriteString( base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.PrecertEntry.IssuerKeyHash[:]) )
+				break
+			}
+		}
+		buffer.WriteString(",")
+		if string(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate) != "null" {
+			buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate))
+		}
+		buffer.WriteString(",")
+		buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.Extensions)+",")
+		for _,cert := range entry.Chain {
+			buffer.WriteString(base64.StdEncoding.EncodeToString(cert)+"|")
+		}
+		buffer.WriteString(",")
+		buffer.WriteString(entry.Server + ",")
+		if string(entry.Leaf.TimestampedEntry.X509Entry) != "null" {
+			sum := sha256.Sum256(entry.Leaf.TimestampedEntry.X509Entry)
+			buffer.WriteString(hex.EncodeToString(sum[:]) + ",")
+		}
+		if string(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate) != "null" {
+			sum := sha256.Sum256(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate)
+			buffer.WriteString(hex.EncodeToString(sum[:]) )
+		}
+		buffer.WriteString("\n")
+		out <- string(buffer.String())
+		//out <- string(buffer.String())
 		//raw, chainWithoutLeaf := extractPrecertFromLogEntry(entry)
 		//externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
 		//for _, external := range externalCertificates {
