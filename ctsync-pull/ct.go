@@ -95,55 +95,7 @@ func sendExternalCertificateThroughChannel(externalCertificate *zsearch.External
 	}
 	out <- externalCertificateBytes
 }
-
-func bindFoundCertToChannel(out chan string) func(*ct.LogEntry, string) {
-	return func(entry *ct.LogEntry, server string) {
-		var buffer bytes.Buffer
-		buffer.WriteString(strconv.FormatInt(entry.Index, 10)+",")
-		buffer.WriteString(entry.Leaf.Version.String()+",")
-		buffer.WriteString(entry.Leaf.LeafType.String()+",")
-		buffer.WriteString(strconv.FormatUint(entry.Leaf.TimestampedEntry.Timestamp, 10)+",")
-		buffer.WriteString(entry.Leaf.TimestampedEntry.EntryType.String()+",")
-		if string(entry.Leaf.TimestampedEntry.X509Entry) != "null" {
-			buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.X509Entry))
-		}
-		buffer.WriteString(",")
-		for _, v := range (entry.Leaf.TimestampedEntry.PrecertEntry.IssuerKeyHash){
-			if v != 0{
-				buffer.WriteString( base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.PrecertEntry.IssuerKeyHash[:]) )
-				break
-			}
-		}
-		buffer.WriteString(",")
-		if string(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate) != "null" {
-			buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate))
-		}
-		buffer.WriteString(",")
-		buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.Extensions)+",")
-		for _,cert := range entry.Chain {
-			buffer.WriteString(base64.StdEncoding.EncodeToString(cert)+"|")
-		}
-		buffer.WriteString(",")
-		buffer.WriteString(entry.Server + ",")
-		if string(entry.Leaf.TimestampedEntry.X509Entry) != "null" {
-			sum := sha256.Sum256(entry.Leaf.TimestampedEntry.X509Entry)
-			buffer.WriteString(hex.EncodeToString(sum[:]) + ",")
-		}
-		if string(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate) != "null" {
-			sum := sha256.Sum256(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate)
-			buffer.WriteString(hex.EncodeToString(sum[:]) )
-		}
-		buffer.WriteString("\n")
-		out <- string(buffer.String())
-		//raw, chainWithoutLeaf := extractCertificateFromLogEntry(entry)
-		//externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
-		//for _, external := range externalCertificates {
-		//	sendExternalCertificateThroughChannel(external, out)
-		//}
-	}
-}
-
-func bindFoundPrecertToChannel(out chan string) func(*ct.LogEntry, string) {
+func bindFoundBothCertToChannel(out chan string) func(*ct.LogEntry, string) {
 	return func(entry *ct.LogEntry, server string) {
 		var buffer bytes.Buffer
 		buffer.WriteString(strconv.FormatInt(entry.Index, 10)+",")
@@ -233,8 +185,8 @@ func pullFromCT(l CTLogInfo, externalCertificateOut chan string, updater chan in
 			MaximumIndex:  maxIndex,
 		}
 		s := scanner.NewScanner(logConnection.logClient, scanOpts, logger)
-		foundCert := bindFoundCertToChannel(externalCertificateOut)
-		foundPrecert := bindFoundPrecertToChannel(externalCertificateOut)
+		foundCert := bindFoundBothCertToChannel(externalCertificateOut)
+		foundPrecert := bindFoundBothCertToChannel(externalCertificateOut)
 
 		lastIndex, err := s.Scan(foundCert, foundPrecert, updater)
 		if err != nil {
