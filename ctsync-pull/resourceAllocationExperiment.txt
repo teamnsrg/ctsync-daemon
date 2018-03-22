@@ -1,0 +1,10 @@
+In order to find the optimal strategy of allocating number of threads for fetcher and parser, I ran the following experiments:
+To pull ct logs from server "https://sabre.ct.comodo.com" (all the experiments ran from beginning):
+20 fetchers 1 parser 2 min: 1387707322 bytes
+1 fetcher 20 parsers 2 min: 148941907 bytes
+Assume that the first one has the parser as bottle neck and the second one has the fetcher as the bottle neck, we can calculate the ratio.
+The optimal ratio of number of threads assigned to fetcher and parser is 9.317105 : 1.
+Reallocating the 21 threads by this ratio, I did get better result:
+19 fetchers 2 parsers 2 min: 1422054242 byts
+Such improvement also proves my assumption of bottle neck about the first two experiments.
+This machine has 32 cores.
