@@ -12,7 +12,7 @@ for log in logs:
 	writeData = OrderedDict()
 	nameString = log["description"]
 	writeData["name"] = "CT_SERVER_"+nameString.upper().replace(" ","_").replace("'", "")
-	writeData["url"] = log["url"]
+	writeData["url"] = "https://"+log["url"][:-1]
 	writeData["batch_size"] = 1000
 	with open(writeFileName, 'a') as outfile:
 		json.dump(writeData, outfile)

@@ -248,6 +248,5 @@ func pullFromCT(l CTLogInfo, externalCertificateOut chan string, updater chan in
 		logInfoOut <- l
 		log.Infof("%s: finished scan through %d", l.Name, maxIndex)
 		time.Sleep(time.Second * 5)
-		return
 	}
 }

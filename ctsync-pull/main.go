@@ -81,13 +81,13 @@ func (r *runState) checkRunning() bool {
 }
 
 func main() {
-	configFile := flag.String("config", "temp_config.json", "The configuration file for log servers")
+	configFile := flag.String("config", "fullConfig.json", "The configuration file for log servers")
 	//brokerString := flag.String("brokers", "localhost:9092", "A comma separated list of the kafka broker locations")
 	//outTopic := flag.String("out-topic", "ct_to_zdb", "Kafka topic to place certificates in")
 	dbPath := flag.String("db", "ctsync-pull.db", "Path to the SQLite file that stores log sync progress")
 	numProcs := flag.Int("gomaxprocs", 0, "Number of processes to use")
-	numFetch := flag.Int("fetchers", 1, "Number of workers assigned to fetch certificates from each server")
-	numMatch := flag.Int("matchers", 1, "Number of workers assigned to parse certs from each server")
+	numFetch := flag.Int("fetchers", 19, "Number of workers assigned to fetch certificates from each server")
+	numMatch := flag.Int("matchers", 2, "Number of workers assigned to parse certs from each server")
 	flag.Parse()
 
 	log.SetLevel(log.InfoLevel)
