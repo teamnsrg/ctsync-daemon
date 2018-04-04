@@ -1,0 +1,13 @@
+https://log.certly.io
+https://ct.izenpe.com
+https://ct.izenpe.eus
+https://ct.wosign.com
+https://ctlog2.wosign.com
+https://ctlog.api.venafi.com
+https://www.certificatetransparency.cn/ct
+https://flimsy.ct.nordu.net:8080
+https://ctlog.sheca.com
+https://ct.akamai.com
+https://alpha.ctlogs.org
+https://clicky.ct.letsencrypt.org
+https://ct.filippo.io/behindthesofa
