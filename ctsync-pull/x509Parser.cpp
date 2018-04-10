@@ -73,7 +73,6 @@ void printCert(string filename) {
     while (count < 10000 && std::getline(infile, line)) {
         if (line.empty()) continue;
         count += 1;
-	if (count == 66)	continue;
 	// find cert string
 	bool precert = true;
         int comma_count = 0, start_pos = 0, end_pos = 0;
