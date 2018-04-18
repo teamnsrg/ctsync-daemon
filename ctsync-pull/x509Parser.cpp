@@ -14,7 +14,7 @@
 
 using namespace std;
 atomic<bool> NOT_FINISHED (true);
-const int CERTS_NUM = 100000;
+const int CERTS_NUM = 1000;
 
 X509* getCert(string &cert_str)
 {
@@ -64,14 +64,48 @@ void parseCert2(Queue<X509*>& q)
         BIO_printf(bio_out,"\n");   
 
         EVP_PKEY *pkey=X509_get_pubkey(x509);
-        EVP_PKEY_print_public(bio_out, pkey, 0, NULL);
-        EVP_PKEY_free(pkey);    
+        if (pkey) {
+            switch (pkey->type) {
+                // http://www.s-and-b.net/ht_root/src/openssl-0_9_6/include/openssl/evp.h
+                case EVP_PKEY_RSA:
+                    BIO_printf(bio_out, "%d bit RSA Key\n\n", EVP_PKEY_bits(pkey));
+                    break;
+                case EVP_PKEY_RSA2:
+                    BIO_printf(bio_out, "%d bit RSA2 Key\n\n", EVP_PKEY_bits(pkey));
+                    break;
+                case EVP_PKEY_DSA:
+                    BIO_printf(bio_out, "%d bit DSA Key\n\n", EVP_PKEY_bits(pkey));
+                    break;
+                case EVP_PKEY_DSA1:
+                    BIO_printf(bio_out, "%d bit DSA1 Key\n\n", EVP_PKEY_bits(pkey));
+                    break;
+                case EVP_PKEY_DSA2:
+                    BIO_printf(bio_out, "%d bit DSA2 Key\n\n", EVP_PKEY_bits(pkey));
+                    break;
+                case EVP_PKEY_DSA3:
+                    BIO_printf(bio_out, "%d bit DSA3 Key\n\n", EVP_PKEY_bits(pkey));
+                    break;
+                case EVP_PKEY_DSA4:
+                    BIO_printf(bio_out, "%d bit DSA4 Key\n\n", EVP_PKEY_bits(pkey));
+                case EVP_PKEY_DH:
+                    BIO_printf(bio_out, "%d bit Diffie-Hellman Key\n\n", EVP_PKEY_bits(pkey));
+                case EVP_PKEY_NONE:
+                    BIO_printf(bio_out, "%d bit No Defined Key\n\n", EVP_PKEY_bits(pkey));
+                    break;
+                default:
+                    BIO_printf(bio_out, "%d bit Unknown Key\n\n", EVP_PKEY_bits(pkey));
+                    break;
+            }
+	    EVP_PKEY_print_public(bio_out, pkey, 0, NULL);
+            EVP_PKEY_free(pkey);
+        }    
 
         X509_CINF *ci=x509->cert_info;
         X509V3_extensions_print(bio_out, (char*)"X509v3 extensions", ci->extensions, X509_FLAG_COMPAT, 0);  
 
         X509_signature_print(bio_out, x509->sig_alg, x509->signature);
         BIO_free(bio_out);
+    	return;
     }
 }
 void produceCerts(Queue<X509*>& q) {
