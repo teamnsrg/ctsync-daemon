@@ -133,7 +133,6 @@ func bindFoundBothCertToChannel(out chan string) func(*ct.LogEntry, string) {
 			sum := sha256.Sum256(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate)
 			buffer.WriteString(hex.EncodeToString(sum[:]))
 		}
-		buffer.WriteString("\n")
 		out <- string(buffer.String())
 		//out <- string(buffer.String())
 		//raw, chainWithoutLeaf := extractPrecertFromLogEntry(entry)
