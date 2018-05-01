@@ -37,10 +37,10 @@ import (
 	zsearch "github.com/censys/censys-definitions/go/censys-definitions"
 	"github.com/golang/protobuf/proto"
 	"github.com/op/go-logging"
-	"github.com/zmap/zcrypto/ct"
-	"github.com/zmap/zcrypto/ct/client"
-	"github.com/zmap/zcrypto/ct/x509"
-	zx509 "github.com/zmap/zcrypto/x509"
+	"github.com/teamnsrg/zcrypto/ct"
+	"github.com/teamnsrg/zcrypto/ct/client"
+	"github.com/teamnsrg/zcrypto/ct/x509"
+	zx509 "github.com/teamnsrg/zcrypto/x509"
 )
 
 type Stats struct {

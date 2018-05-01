@@ -19,8 +19,8 @@ import (
 	"time"
 
 	"github.com/censys/censys-definitions/go/censys-definitions"
-	"github.com/zmap/zcrypto/ct"
-	"github.com/zmap/zcrypto/x509"
+	"github.com/teamnsrg/zcrypto/ct"
+	"github.com/teamnsrg/zcrypto/x509"
 )
 
 func convertASNCertToByteArray(chain []ct.ASN1Cert) (out [][]byte) {
