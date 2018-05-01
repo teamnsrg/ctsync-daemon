@@ -21,7 +21,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/zmap/zcrypto/ct"
-	"github.com/zmap/zcrypto/ct/scanner"
+	"github.com/teamnsrg/zcrypto/ct/scanner"
 
 	log "github.com/sirupsen/logrus"
 
