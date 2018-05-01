@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/zmap/zcrypto/ct"
+	"github.com/teamnsrg/zcrypto/ct"
 	"github.com/teamnsrg/zcrypto/ct/scanner"
 
 	log "github.com/sirupsen/logrus"
