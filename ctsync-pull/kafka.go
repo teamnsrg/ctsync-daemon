@@ -15,25 +15,9 @@
 package main
 
 import (
-	"sync"
-
-	"github.com/Shopify/sarama"
-	//"github.com/prometheus/common/log"
-	//"github.com/golang/protobuf/proto"
-
-	//zsearch "github.com/censys/censys-definitions/go/censys-definitions"
-	//"crypto/x509"
-	//"encoding/json"
 	"fmt"
+	"sync"
 )
-
-func createKafkaProducer(brokers []string) (producer sarama.SyncProducer, err error) {
-	config := sarama.NewConfig()
-	config.Version = sarama.V0_10_1_0
-	config.Producer.Return.Successes = true
-	producer, err = sarama.NewSyncProducer(brokers, config)
-	return
-}
 
 func pushToKafka(incoming <-chan string, wg *sync.WaitGroup) {
 	defer wg.Done()

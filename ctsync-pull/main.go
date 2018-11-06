@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 
 	//"strings"
@@ -129,12 +130,15 @@ func main() {
 		signalWg.Done()
 	}()
 
-	// Start goroutine that produces certificates to Kafka.
-	certificatesToKafka := make(chan string, 1000)
 	var pushWg sync.WaitGroup
-	pushWg.Add(1)
 
-	go pushToKafka(certificatesToKafka, &pushWg)
+	outputChannels := make([]chan string, len(configuration))
+	for i := 0; i < len(configuration); i++ {
+		outputChannels[i] = make(chan string, 100)
+		var pushWg sync.WaitGroup
+		pushWg.Add(1)
+		go pushToFile(outputChannels[i], &pushWg, strings.Replace(configuration[i].Name, "/", "_", -1))
+	}
 
 	// Start goroutine that writes indicies to SQLite
 	logInfoUpdate := make(chan CTLogInfo)
@@ -147,7 +151,7 @@ func main() {
 	for i := 0; i < len(configuration); i++ {
 		pullWg.Add(1)
 		updater := make(chan int64)
-		go pullFromCT(configuration[i], certificatesToKafka, updater, logInfoUpdate, *numMatch, *numFetch, &pullWg, &running)
+		go pullFromCT(configuration[i], outputChannels[i], updater, logInfoUpdate, *numMatch, *numFetch, &pullWg, &running)
 		go updateLogInfoFromUpdater(updater, configuration[i], logInfoUpdate)
 	}
 
@@ -155,7 +159,9 @@ func main() {
 	pullWg.Wait()
 	close(logInfoUpdate)
 	dbWg.Wait()
-	close(certificatesToKafka)
+	for i := 0; i < len(configuration); i++ {
+		close(outputChannels[i])
+	}
 	pushWg.Wait()
 	close(signalChannel)
 	signalWg.Wait()
