@@ -27,8 +27,8 @@ func pushToFile(incoming <-chan string, wg *sync.WaitGroup, outputDirectory stri
 				w.Flush()
 				currentFile.Close()
 			}
-
-			currentFile, err = os.Create("log_entries_from_" + strconv.Itoa(counter+1) + ".csv")
+			filename := "log_entries_from_" + strconv.Itoa(counter+1) + ".csv"
+			currentFile, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Fatal(err)
 			}
