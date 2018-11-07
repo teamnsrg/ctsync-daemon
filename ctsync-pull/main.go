@@ -18,6 +18,7 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
@@ -89,6 +90,7 @@ func main() {
 	numProcs := flag.Int("gomaxprocs", 0, "Number of processes to use")
 	numFetch := flag.Int("fetchers", 19, "Number of workers assigned to fetch certificates from each server")
 	numMatch := flag.Int("matchers", 2, "Number of workers assigned to parse certs from each server")
+	outputDirectory := flag.String("output-dir", "certs", "Output directory to store certificates")
 	flag.Parse()
 
 	log.SetLevel(log.InfoLevel)
@@ -137,7 +139,8 @@ func main() {
 		outputChannels[i] = make(chan string, 100)
 		var pushWg sync.WaitGroup
 		pushWg.Add(1)
-		go pushToFile(outputChannels[i], &pushWg, strings.Replace(configuration[i].Name, "/", "_", -1))
+		dir := filepath.Join(*outputDirectory, strings.Replace(configuration[i].Name, "/", "_", -1))
+		go pushToFile(outputChannels[i], &pushWg, dir)
 	}
 
 	// Start goroutine that writes indicies to SQLite
