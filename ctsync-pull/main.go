@@ -16,6 +16,7 @@ package main
 
 import (
 	"flag"
+	"github.com/teamnsrg/zcrypto/ct"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -134,9 +135,9 @@ func main() {
 
 	var pushWg sync.WaitGroup
 
-	outputChannels := make([]chan string, len(configuration))
+	outputChannels := make([]chan *ct.LogEntry, len(configuration))
 	for i := 0; i < len(configuration); i++ {
-		outputChannels[i] = make(chan string, 100)
+		outputChannels[i] = make(chan *ct.LogEntry, 100)
 		var pushWg sync.WaitGroup
 		pushWg.Add(1)
 		dir := filepath.Join(*outputDirectory, strings.Replace(configuration[i].Name, "/", "_", -1))

@@ -26,13 +26,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	zsearch "github.com/censys/censys-definitions/go/censys-definitions"
-	//"fmt"
-	//"encoding/json"
-	"encoding/base64"
-	//"fmt""
-	"bytes"
-	"encoding/hex"
-	"strconv"
 )
 
 const kMaxFailedScans = 10
@@ -96,54 +89,13 @@ func sendExternalCertificateThroughChannel(externalCertificate *zsearch.External
 	}
 	out <- externalCertificateBytes
 }
-func bindFoundBothCertToChannel(out chan string) func(*ct.LogEntry, string) {
+func bindFoundBothCertToChannel(out chan *ct.LogEntry) func(*ct.LogEntry, string) {
 	return func(entry *ct.LogEntry, server string) {
-		var buffer bytes.Buffer
-		buffer.WriteString(strconv.FormatInt(entry.Index, 10) + ",")
-		buffer.WriteString(entry.Leaf.Version.String() + ",")
-		buffer.WriteString(entry.Leaf.LeafType.String() + ",")
-		buffer.WriteString(strconv.FormatUint(entry.Leaf.TimestampedEntry.Timestamp, 10) + ",")
-		buffer.WriteString(entry.Leaf.TimestampedEntry.EntryType.String() + ",")
-		if entry.Leaf.TimestampedEntry.X509Entry != nil {
-			buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.X509Entry))
-		}
-		buffer.WriteString(",")
-		for _, v := range (entry.Leaf.TimestampedEntry.PrecertEntry.IssuerKeyHash) {
-			if v != 0 {
-				buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.PrecertEntry.IssuerKeyHash[:]))
-				break
-			}
-		}
-		buffer.WriteString(",")
-		if entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate != nil {
-			buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate))
-		}
-		buffer.WriteString(",")
-		buffer.WriteString(base64.StdEncoding.EncodeToString(entry.Leaf.TimestampedEntry.Extensions) + ",")
-		for _, cert := range entry.Chain {
-			buffer.WriteString(base64.StdEncoding.EncodeToString(cert) + "|")
-		}
-		buffer.WriteString(",")
-		buffer.WriteString(entry.Server + ",")
-		if entry.Leaf.TimestampedEntry.X509Entry != nil {
-			sum := sha256.Sum256(entry.Leaf.TimestampedEntry.X509Entry)
-			buffer.WriteString(hex.EncodeToString(sum[:]))
-		}
-		if entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate != nil {
-			sum := sha256.Sum256(entry.Leaf.TimestampedEntry.PrecertEntry.TBSCertificate)
-			buffer.WriteString(hex.EncodeToString(sum[:]))
-		}
-		out <- string(buffer.String())
-		//out <- string(buffer.String())
-		//raw, chainWithoutLeaf := extractPrecertFromLogEntry(entry)
-		//externalCertificates := buildExternalCertificatesFromBytes(raw, chainWithoutLeaf, entry, server)
-		//for _, external := range externalCertificates {
-		//	sendExternalCertificateThroughChannel(external, out)
-		//}
+		out <- entry
 	}
 }
 
-func pullFromCT(l CTLogInfo, externalCertificateOut chan string, updater chan int64, logInfoOut chan CTLogInfo, numMatch int, numFetch int, wg *sync.WaitGroup, running *runState) {
+func pullFromCT(l CTLogInfo, externalCertificateOut chan *ct.LogEntry, updater chan int64, logInfoOut chan CTLogInfo, numMatch int, numFetch int, wg *sync.WaitGroup, running *runState) {
 	defer wg.Done()
 	failedScanCount := 0
 	for {
