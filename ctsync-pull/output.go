@@ -57,7 +57,6 @@ func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirector
 			leafB64 = base64.StdEncoding.EncodeToString(entry.X509Cert.Raw)
 		} else if entry.Leaf.TimestampedEntry.EntryType == ct.PrecertLogEntryType {
 			leafB64 = base64.StdEncoding.EncodeToString(entry.Precert.Raw)
-			entry.Precert
 		}
 
 		row := []string{
