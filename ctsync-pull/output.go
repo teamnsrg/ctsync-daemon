@@ -15,7 +15,7 @@ import (
 	"sync"
 )
 
-func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirectory string) {
+func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirectory string, entriesPerFile int) {
 	defer wg.Done()
 
 	if _, err := ioutil.ReadDir(outputDirectory); err != nil {
@@ -25,16 +25,15 @@ func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirector
 	var currentFile *os.File
 	var writer *csv.Writer
 	var err error
-	MaxEntriesPerFile := 10000
 	currentBin := -1
 	for entry := range incoming {
-		bin := int(entry.Index) / MaxEntriesPerFile
+		bin := int(entry.Index) / entriesPerFile
 		if bin != currentBin {
 			if currentFile != nil {
 				writer.Flush()
 				currentFile.Close()
 			}
-			filename := filepath.Join(outputDirectory, strconv.Itoa(bin*MaxEntriesPerFile)+"-"+strconv.Itoa((bin+1)*MaxEntriesPerFile)+".csv")
+			filename := filepath.Join(outputDirectory, strconv.Itoa(bin*entriesPerFile)+"-"+strconv.Itoa((bin+1)*entriesPerFile)+".csv")
 			currentFile, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Fatal(err)

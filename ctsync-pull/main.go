@@ -92,6 +92,7 @@ func main() {
 	numFetch := flag.Int("fetchers", 19, "Number of workers assigned to fetch certificates from each server")
 	numMatch := flag.Int("matchers", 2, "Number of workers assigned to parse certs from each server")
 	outputDirectory := flag.String("output-dir", "certs", "Output directory to store certificates")
+	entriesPerFile := flag.Int("entries-per-file", 100000, "Number of log entries per file")
 	flag.Parse()
 
 	log.SetLevel(log.InfoLevel)
@@ -144,7 +145,7 @@ func main() {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			os.MkdirAll(dir, os.ModePerm)
 		}
-		go pushToFile(outputChannels[i], &pushWg, dir)
+		go pushToFile(outputChannels[i], &pushWg, dir, *entriesPerFile)
 	}
 
 	// Start goroutine that writes indicies to SQLite
