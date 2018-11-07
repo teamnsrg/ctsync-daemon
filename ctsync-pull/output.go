@@ -22,18 +22,19 @@ func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirector
 		log.Fatal(err)
 	}
 
-	counter := 0
 	var currentFile *os.File
 	var writer *csv.Writer
 	var err error
-	MaxEntriesPerFile := 1000
+	MaxEntriesPerFile := 10000
+	currentBin := 0
 	for entry := range incoming {
-		if counter%MaxEntriesPerFile == 0 {
+		bin := int(entry.Index) / MaxEntriesPerFile
+		if bin != currentBin {
 			if currentFile != nil {
 				writer.Flush()
 				currentFile.Close()
 			}
-			filename := filepath.Join(outputDirectory, "le_from_"+strconv.Itoa(counter+1)+".csv")
+			filename := filepath.Join(outputDirectory, strconv.Itoa(bin*MaxEntriesPerFile)+"-"+strconv.Itoa((bin+1)*MaxEntriesPerFile)+".csv")
 			currentFile, err = os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 			if err != nil {
 				log.Fatal(err)
@@ -41,7 +42,6 @@ func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirector
 			writer = csv.NewWriter(currentFile)
 		}
 
-		counter += 1
 		chainBytes := make([]byte, 0)
 		chainB64 := make([]string, len(entry.Chain))
 		for i, c := range entry.Chain {
@@ -73,6 +73,8 @@ func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirector
 		writer.Write(row)
 	}
 
-	writer.Flush()
-	currentFile.Close()
+	if currentFile != nil {
+		writer.Flush()
+		currentFile.Close()
+	}
 }
