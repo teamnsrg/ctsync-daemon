@@ -140,6 +140,9 @@ func main() {
 		var pushWg sync.WaitGroup
 		pushWg.Add(1)
 		dir := filepath.Join(*outputDirectory, strings.Replace(configuration[i].Name, "/", "_", -1))
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			os.MkdirAll(dir, os.ModePerm)
+		}
 		go pushToFile(outputChannels[i], &pushWg, dir)
 	}
 
