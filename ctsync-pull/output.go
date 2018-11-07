@@ -26,7 +26,7 @@ func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirector
 	var writer *csv.Writer
 	var err error
 	MaxEntriesPerFile := 10000
-	currentBin := 0
+	currentBin := -1
 	for entry := range incoming {
 		bin := int(entry.Index) / MaxEntriesPerFile
 		if bin != currentBin {
