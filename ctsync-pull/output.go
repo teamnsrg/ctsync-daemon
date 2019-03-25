@@ -49,13 +49,14 @@ func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirector
 		}
 
 		chainHash := fmt.Sprintf("%x", sha256.Sum256(chainBytes))
-		leafHash := fmt.Sprintf("%x", sha256.Sum256(entry.X509Cert.Raw))
 
-		var leafB64 string
+		var leafB64, leafHash string
 		if entry.Leaf.TimestampedEntry.EntryType == ct.X509LogEntryType {
 			leafB64 = base64.StdEncoding.EncodeToString(entry.X509Cert.Raw)
+			leafHash = fmt.Sprintf("%x", sha256.Sum256(entry.X509Cert.Raw))
 		} else if entry.Leaf.TimestampedEntry.EntryType == ct.PrecertLogEntryType {
 			leafB64 = base64.StdEncoding.EncodeToString(entry.Precert.Raw)
+			leafHash = fmt.Sprintf("%x", sha256.Sum256(entry.Precert.Raw))
 		}
 
 		row := []string{
