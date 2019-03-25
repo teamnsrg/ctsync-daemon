@@ -49,7 +49,7 @@ func pushToFile(incoming <-chan *ct.LogEntry, wg *sync.WaitGroup, outputDirector
 		}
 
 		chainHash := fmt.Sprintf("%x", sha256.Sum256(chainBytes))
-		leafHash := fmt.Sprintf("%x", sha256.Sum256(entry.Leaf.TimestampedEntry.X509Entry))
+		leafHash := fmt.Sprintf("%x", sha256.Sum256(entry.X509Cert.Raw))
 
 		var leafB64 string
 		if entry.Leaf.TimestampedEntry.EntryType == ct.X509LogEntryType {
