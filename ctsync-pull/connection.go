@@ -17,7 +17,6 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/teamnsrg/zcrypto/ct/client"
-	"strings"
 )
 
 type LogServerConnection struct {
@@ -39,16 +38,14 @@ func merkleTreeSize(logClient *client.LogClient) (uint64, error) {
 func NewCTLogConnection(uri string, bucketSize int64) *LogServerConnection {
 	var c LogServerConnection
 
-	sanitizedURI := strings.TrimRight(uri, "/") + "/"
-
-	c.logClient = client.New(sanitizedURI)
+	c.logClient = client.New(uri)
 	if c.logClient == nil {
-		log.Warnf("could not create connection to %s", sanitizedURI)
+		log.Warnf("could not create connection to %s", uri)
 		return nil
 	}
 	treeSize, err := merkleTreeSize(c.logClient)
 	if err != nil {
-		log.Warnf("could not get tree size from %s STH: %v", sanitizedURI, err)
+		log.Warnf("could not get tree size from %s STH: %v", uri, err)
 		return nil
 	}
 	c.treeSize = int64(treeSize)

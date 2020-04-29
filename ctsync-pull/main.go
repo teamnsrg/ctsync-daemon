@@ -29,11 +29,10 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/op/go-logging"
 	log "github.com/sirupsen/logrus"
 )
 
-var logger = logging.MustGetLogger("")
+var logger = log.New()
 
 func updateCTLogInfoInDB(db *gorm.DB, config CTLogInfo) {
 	var logConfig CTLogInfo
